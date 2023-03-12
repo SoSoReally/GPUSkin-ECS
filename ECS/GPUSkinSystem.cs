@@ -1,26 +1,10 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using DOTS;
-using GPUSkin;
-using Unity.Burst;
 using Unity.Burst.Intrinsics;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
-using Unity.Entities.UniversalDelegates;
-using Unity.Jobs;
 using Unity.Mathematics;
-using Unity.Rendering;
-using Unity.Transforms;
-using UnityEditor.Animations;
-using UnityEditor.PackageManager;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
-using UnityEngine.Playables;
-using UnityEngine.Rendering;
-using UnityEngine.Rendering.VirtualTexturing;
 
 namespace GPUSkin
 {
