@@ -1,10 +1,12 @@
 using System;
+using System.Linq;
 using Unity.Burst.Intrinsics;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
+using static UnityEngine.Rendering.DebugUI;
 
 namespace GPUSkin
 {
@@ -118,7 +120,7 @@ namespace GPUSkin
         protected override void OnUpdate()
         {
             var deltaTime = SystemAPI.Time.DeltaTime;
-            Dependency = new TransitionJob() { deltaTime = deltaTime }.Schedule(Dependency);
+            Dependency = new TransitionJob() { ComponentTypeHandle = SystemAPI.GetComponentTypeHandle<AnimationTransition>() , deltaTime = deltaTime }.Schedule(Dependency);
             Dependency = new PlayAnimationJobNoLerp() { deltaTime = deltaTime }.Schedule(Dependency);
             Dependency = new PlayAnimationJobLerp() { deltaTime = deltaTime }.Schedule(Dependency);
         }
@@ -149,13 +151,15 @@ namespace GPUSkin
             public float deltaTime;
             [NativeDisableUnsafePtrRestriction]
             public EnabledMask EnabledMask;
+            public ComponentTypeHandle<AnimationTransition> ComponentTypeHandle;
+            public NativeArray<AnimationTransition> animationTransitions;
             public void Execute(
                 [EntityIndexInChunk]int entityIndex,
                 ref TransitionFrame nextFrame,
                 ref Transition transition,
-                ref AnimationController animation,
-                ref AnimationTransition animationTransition)
+                ref AnimationController animation)
             {
+                ref AnimationTransition animationTransition = ref animationTransitions.AsSpan()[entityIndex];
                 animationTransition.trvael -= deltaTime * animation.speed;
                 if (animationTransition.trvael >= animationTransition.normalizeLength)
                 {
@@ -176,7 +180,8 @@ namespace GPUSkin
 
             public bool OnChunkBegin(in ArchetypeChunk chunk, int unfilteredChunkIndex, bool useEnabledMask, in v128 chunkEnabledMask)
             {
-                EnabledMask = chunk.GetEnabledMask(ref this.__GPUSkin_AnimationTransitionComponentTypeHandle);
+                EnabledMask = chunk.GetEnabledMask(ref this.ComponentTypeHandle);
+                animationTransitions = chunk.GetNativeArray(ref this.ComponentTypeHandle);
                 return true;
             }
 
