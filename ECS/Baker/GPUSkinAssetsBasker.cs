@@ -1,21 +1,22 @@
-using System.Collections;
-using System.Collections.Generic;
-using GPUSkin;
+using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
-using UnityEngine.Rendering.VirtualTexturing;
-
-public class GPUSkinAssetsBake : MonoBehaviour
+namespace GPUSkin
 {
-    public GPUSkinAsset GPUSkinAsset;
-
-    public class GPUSkinAssetsBaker: Baker<GPUSkinAssetsBake>
+    public class GPUSkinAssetsBake : MonoBehaviour
     {
-        public override void Bake(GPUSkinAssetsBake authoring)
-        {
-            GPUSkinSystem system = this._State.World.GetOrCreateSystemManaged<GPUSkinSystem>();
-            GPUSkinUtility.SetupEntity(GetEntity(TransformUsageFlags.Default), system, this._State.World, authoring.GPUSkinAsset, authoring.GetComponent<MeshRenderer>().sharedMaterial);
-        }
+        public GPUSkinAsset GPUSkinAsset;
 
+        public class GPUSkinAssetsBaker : Baker<GPUSkinAssetsBake>
+        {
+            public override void Bake(GPUSkinAssetsBake authoring)
+            {
+                GPUSkinSystem system = this._State.World.GetOrCreateSystemManaged<GPUSkinSystem>();
+                NativeArray<Entity> entities = new NativeArray<Entity>(1, Allocator.Temp);
+                entities[0] = GetEntity(TransformUsageFlags.Default);
+                GPUSkinUtility.SetupEntity(entities, system, this._State.World, authoring.GPUSkinAsset, authoring.GetComponent<MeshRenderer>().sharedMaterial);
+            }
+
+        }
     }
 }
