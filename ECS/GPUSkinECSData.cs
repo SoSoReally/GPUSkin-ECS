@@ -1,14 +1,9 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Rendering;
-using UnityEditor.Animations;
-using UnityEngine;
-using static Unity.Collections.AllocatorManager;
 
 namespace GPUSkin
 {
