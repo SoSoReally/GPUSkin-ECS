@@ -146,7 +146,7 @@ namespace GPUSkin
         protected override void OnCreate()
         {
             AnimationTransitionQuery = SystemAPI.QueryBuilder().WithAspect<AnimationTransitionAspect>().WithAll<Tag>().WithAll<PerInstanceCullingTag>().Build();
-            typeHandle = new AnimationTransitionAspect.TypeHandle(ref this.CheckedStateRef, false);
+            typeHandle = new AnimationTransitionAspect.TypeHandle(ref this.CheckedStateRef);
         }
         protected override void OnUpdate()
         {
