@@ -8,15 +8,21 @@ using UnityEngine;
 
 namespace GPUSkin
 {
-
-
     public static partial class GPUSkinUtility
     {
-        public static void SetupEntity(NativeArray<Entity> entitys, World world, GPUSkinAsset gPUSkinAsset, Material material)
+        public static void SetupEntity(
+            NativeArray<Entity> entitys,
+            World world,
+            GPUSkinAsset gPUSkinAsset,
+            Material material
+        )
         {
             BlobAssetReference<GPUAnimator> animtor = GPUAnimator.Build(gPUSkinAsset);
             var entityManager = world.EntityManager;
-            entityManager.AddComponent(entitys, new ComponentTypeSet(GPUSkinSystem.RqueristComponentType));
+            entityManager.AddComponent(
+                entitys,
+                new ComponentTypeSet(GPUSkinSystem.RqueristComponentType)
+            );
             var shaderName = material.shader.name;
 
             var ac = new AnimationController()
@@ -34,48 +40,82 @@ namespace GPUSkin
 
             switch (shaderName)
             {
-                case GPUSkin: break;
+                case GPUSkin:
+                    break;
                 case GPUSkinLerp:
-                    entityManager.AddComponent(entitys, new ComponentTypeSet(GPUSkinSystem.RqueristComponentTypeLerp));
+                    entityManager.AddComponent(
+                        entitys,
+                        new ComponentTypeSet(GPUSkinSystem.RqueristComponentTypeLerp)
+                    );
                     ac.isLerp = true;
                     break;
                 case GPUSkinTranition:
                     ac.CanTranition = true;
-                    entityManager.AddComponent(entitys, new ComponentTypeSet(GPUSkinSystem.RqueristComponentTypeTransition));
+                    entityManager.AddComponent(
+                        entitys,
+                        new ComponentTypeSet(GPUSkinSystem.RqueristComponentTypeTransition)
+                    );
                     break;
                 case GPUSkinLerpAndTranition:
-                    entityManager.AddComponent(entitys, new ComponentTypeSet(GPUSkinSystem.RqueristComponentTypeLerp));
-                    entityManager.AddComponent(entitys, new ComponentTypeSet(GPUSkinSystem.RqueristComponentTypeTransition));
+                    entityManager.AddComponent(
+                        entitys,
+                        new ComponentTypeSet(GPUSkinSystem.RqueristComponentTypeLerp)
+                    );
+                    entityManager.AddComponent(
+                        entitys,
+                        new ComponentTypeSet(GPUSkinSystem.RqueristComponentTypeTransition)
+                    );
                     ac.CanTranition = true;
                     ac.isLerp = true;
                     break;
-                default: break;
+                default:
+                    break;
             }
             for (int i = 0; i < entitys.Length; i++)
             {
                 var entity = entitys[i];
-                entityManager.SetComponentData<BlobAssertReferenceGPUAnimator>(entity, new BlobAssertReferenceGPUAnimator() { Animator = animtor });
+                entityManager.SetComponentData<BlobAssertReferenceGPUAnimator>(
+                    entity,
+                    new BlobAssertReferenceGPUAnimator() { Animator = animtor }
+                );
                 entityManager.SetComponentData(entity, ac);
             }
         }
-        public static void SetAnimationByIndex(int index, Entity entity, EntityManager entityManager)
+
+        public static void SetAnimationByIndex(
+            int index,
+            Entity entity,
+            EntityManager entityManager
+        )
         {
-            entityManager.SetComponentData(entity, GetAnimationController(index, entity, entityManager));
+            entityManager.SetComponentData(
+                entity,
+                GetAnimationController(index, entity, entityManager)
+            );
         }
 
-        public static AnimationController GetAnimationController(int index, Entity entity, EntityManager entityManager)
+        public static AnimationController GetAnimationController(
+            int index,
+            Entity entity,
+            EntityManager entityManager
+        )
         {
             var Animator = entityManager.GetComponentData<BlobAssertReferenceGPUAnimator>(entity);
             return GetAnimationController(index, Animator);
         }
 
-        public static AnimationController GetAnimationController(int index, BlobAssertReferenceGPUAnimator blobAssertReferenceGPUAnimator)
+        public static AnimationController GetAnimationController(
+            int index,
+            BlobAssertReferenceGPUAnimator blobAssertReferenceGPUAnimator
+        )
         {
             var ac = new AnimationController()
             {
                 currentState = new AnimationState()
                 {
-                    clip = new GPUAnimationClipData(blobAssertReferenceGPUAnimator.Animator.Value.Clips[index]),
+                    clip = new GPUAnimationClipData(
+                        blobAssertReferenceGPUAnimator.Animator.Value.Clips[index]
+                    ),
                     currentFrame = 0,
                     index = index,
                 },
@@ -86,7 +126,12 @@ namespace GPUSkin
             return ac;
         }
 
-        public static void SetAnimationIndex(int index, BlobAssertReferenceGPUAnimator blobAssertReferenceGPUAnimator, ref AnimationController animationController, float normalizeTime = 0f)
+        public static void SetAnimationIndex(
+            int index,
+            BlobAssertReferenceGPUAnimator blobAssertReferenceGPUAnimator,
+            ref AnimationController animationController,
+            float normalizeTime = 0f
+        )
         {
             if (animationController.currentState.index == index)
             {
@@ -94,20 +139,26 @@ namespace GPUSkin
             }
             animationController.currentState = new AnimationState()
             {
-                clip = new GPUAnimationClipData(blobAssertReferenceGPUAnimator.Animator.Value.Clips[index]),
+                clip = new GPUAnimationClipData(
+                    blobAssertReferenceGPUAnimator.Animator.Value.Clips[index]
+                ),
                 currentFrame = 0,
                 index = index,
                 travelTime = 0f
             };
             if (normalizeTime > 0f)
             {
-                animationController.currentState.travelTime = animationController.currentState.clip.normalizeLength * normalizeTime;
-                animationController.currentState.currentFrame = animationController.currentState.clip.normalizeLength * normalizeTime * animationController.currentState.clip.frameRate;
+                animationController.currentState.travelTime =
+                    animationController.currentState.clip.normalizeLength * normalizeTime;
+                animationController.currentState.currentFrame =
+                    animationController.currentState.clip.normalizeLength
+                    * normalizeTime
+                    * animationController.currentState.clip.frameRate;
             }
         }
+
         public static AnimationState ClipConvertState(GPUAnimationClip clip)
         {
-
             return new AnimationState()
             {
                 clip = new GPUAnimationClipData()
@@ -134,32 +185,61 @@ namespace GPUSkin
         public readonly EnabledRefRW<AnimationTransition> enabledRefRWanimationTransition;
     }
 
-    public partial class GPUSkinSystem : SystemBase
+    [DisableAutoCreation]
+    public partial struct GPUSkinSystem : ISystem
     {
-        public readonly static ComponentType[] RqueristComponentType = new ComponentType[] { ComponentType.ReadOnly<CurrentFrame>(), ComponentType.ReadOnly<Tag>(), ComponentType.ReadOnly<AnimationController>(), ComponentType.ReadOnly<BlobAssertReferenceGPUAnimator>() };
-        public readonly static ComponentType[] RqueristComponentTypeLerp = new ComponentType[] { ComponentType.ReadOnly<LerpFrame>() };
-        public readonly static ComponentType[] RqueristComponentTypeTransition = new ComponentType[] { ComponentType.ReadOnly<Transition>(), ComponentType.ReadOnly<TransitionFrame>() };
-
+        public static readonly ComponentType[] RqueristComponentType = new ComponentType[]
+        {
+            ComponentType.ReadOnly<CurrentFrame>(),
+            ComponentType.ReadOnly< CurrentFrameWrite>(),
+            ComponentType.ReadOnly<Tag>(),
+            ComponentType.ReadOnly<AnimationController>(),
+            ComponentType.ReadOnly<BlobAssertReferenceGPUAnimator>(),
+            ComponentType.ReadOnly<AnimationTransition>(),
+        };
+        public static readonly ComponentType[] RqueristComponentTypeLerp = new ComponentType[]
+        {
+            ComponentType.ReadOnly<LerpFrame>(),
+            ComponentType.ReadOnly< LerpFrameWrite>()
+        };
+        public static readonly ComponentType[] RqueristComponentTypeTransition = new ComponentType[]
+        {
+            ComponentType.ReadOnly<Transition>(),
+            ComponentType.ReadOnly<TransitionFrame>()
+        };
 
         public AnimationTransitionAspect.TypeHandle typeHandle;
         public EntityQuery AnimationTransitionQuery;
-        protected override void OnCreate()
+
+        public void OnCreate(ref SystemState systemState)
         {
-            AnimationTransitionQuery = SystemAPI.QueryBuilder().WithAspect<AnimationTransitionAspect>().WithAll<Tag>().WithAll<PerInstanceCullingTag>().Build();
-            typeHandle = new AnimationTransitionAspect.TypeHandle(ref this.CheckedStateRef);
-        }
-        protected override void OnUpdate()
-        {
-            typeHandle.Update(ref this.CheckedStateRef);
-            var deltaTime = SystemAPI.Time.DeltaTime;
-            Dependency = new TransitionJob() { TypeHandle = typeHandle, deltaTime = deltaTime }.Schedule(AnimationTransitionQuery, Dependency);
-            Dependency = new PlayAnimationJobNoLerp() { deltaTime = deltaTime }.ScheduleParallel(Dependency);
-            Dependency = new PlayAnimationJobLerp() { deltaTime = deltaTime }.ScheduleParallel(Dependency);
+            AnimationTransitionQuery = SystemAPI
+                .QueryBuilder()
+                .WithAspect<AnimationTransitionAspect>()
+                .WithAll<Tag>()
+                .WithAll<PerInstanceCullingTag>()
+                .Build();
+            typeHandle = new AnimationTransitionAspect.TypeHandle(ref systemState);
         }
 
-        protected override void OnDestroy()
+        [BurstCompile]
+        public void OnUpdate(ref SystemState systemState)
         {
-            base.OnDestroy();
+            typeHandle.Update(ref systemState);
+            var deltaTime = SystemAPI.Time.DeltaTime;
+            systemState.Dependency = new TransitionJob()
+            {
+                TypeHandle = typeHandle,
+                deltaTime = deltaTime
+            }.Schedule(AnimationTransitionQuery, systemState.Dependency);
+            new PlayAnimationJobNoLerp()
+            {
+                deltaTime = deltaTime
+            }.ScheduleParallel();// SystemAPI.QueryBuilder().WithAllRW<CurrentFrame>().WithAllRW<AnimationController>().WithOptions(EntityQueryOptions.FilterWriteGroup).Build());
+            new PlayAnimationJobLerp()
+            {
+                deltaTime = deltaTime
+            }.ScheduleParallel();//(SystemAPI.QueryBuilder().WithAllRW<CurrentFrame>().WithAllRW<LerpFrame>().WithAllRW<AnimationController>().Build() );
         }
 
         [BurstCompile]
@@ -168,38 +248,52 @@ namespace GPUSkin
             [ReadOnly]
             public float deltaTime;
             public AnimationTransitionAspect.TypeHandle TypeHandle;
-            public void Execute(in ArchetypeChunk chunk, int unfilteredChunkIndex, bool useEnabledMask, in v128 chunkEnabledMask)
+
+            public void Execute(
+                in ArchetypeChunk chunk,
+                int unfilteredChunkIndex,
+                bool useEnabledMask,
+                in v128 chunkEnabledMask
+            )
             {
                 var valueArray = TypeHandle.Resolve(chunk);
-                ChunkEntityEnumerator chunkEntityEnumerator = new ChunkEntityEnumerator(useEnabledMask, chunkEnabledMask, chunk.Count);
+                ChunkEntityEnumerator chunkEntityEnumerator = new ChunkEntityEnumerator(
+                    useEnabledMask,
+                    chunkEnabledMask,
+                    chunk.Count
+                );
                 while (chunkEntityEnumerator.NextEntityIndex(out int nextIndex))
                 {
                     var c = valueArray[nextIndex];
                     c.enabledRefRWanimationTransition.ValueRW = false;
-                    RefExecute(ref c.nextFrame.ValueRW,
+                    RefExecute(
+                        ref c.nextFrame.ValueRW,
                         ref c.transition.ValueRW,
                         ref c.animation.ValueRW,
                         ref c.animationTransition.ValueRW,
                         c.enabledRefRWanimationTransition,
-                        deltaTime);
+                        deltaTime
+                    );
                 }
-
-
             }
+
             public void RefExecute(
                 ref TransitionFrame nextFrame,
                 ref Transition transition,
                 ref AnimationController animation,
                 ref AnimationTransition animationTransition,
                 EnabledRefRW<AnimationTransition> enabledRefRW,
-                float deltaTime)
+                float deltaTime
+            )
             {
                 animationTransition.trvael -= deltaTime * animation.speed;
                 if (animationTransition.trvael >= animationTransition.normalizeLength)
                 {
                     animation.currentState = animationTransition.nextState;
                     animation.currentState.currentFrame = nextFrame.value;
-                    animation.currentState.travelTime = (nextFrame.value - animation.currentState.clip.start) / animationTransition.nextState.clip.frameRate;
+                    animation.currentState.travelTime =
+                        (nextFrame.value - animation.currentState.clip.start)
+                        / animationTransition.nextState.clip.frameRate;
                     nextFrame.value = 0;
                     transition.value = new half(0);
                     animationTransition.trvael = 0;
@@ -212,11 +306,7 @@ namespace GPUSkin
             }
         }
     }
-
-
-
-    [WithAll(typeof(Tag))]
-    [WithAll(typeof(PerInstanceCullingTag))]
+    [WithAll(typeof(CurrentFrameWrite))]
     [WithOptions(EntityQueryOptions.FilterWriteGroup)]
     [BurstCompile]
     public partial struct PlayAnimationJobNoLerp : IJobEntity
@@ -224,17 +314,12 @@ namespace GPUSkin
         [ReadOnly]
         public float deltaTime;
 
-        public void Execute(
-            ref CurrentFrame currentFrame,
-            ref AnimationController animation)
+        public void Execute(ref CurrentFrame currentFrame, ref AnimationController animation )
         {
             ref readonly var clip = ref animation.currentState.clip;
             ref var state = ref animation.currentState;
 
-
             state.travelTime += (deltaTime * animation.speed);
-
-
 
             if (clip.isLoop)
             {
@@ -246,15 +331,16 @@ namespace GPUSkin
             }
             var frame = state.travelTime * clip.frameRate;
             state.currentFrame = clip.start + Mathf.FloorToInt(frame);
-            state.currentFrame = math.clamp(state.currentFrame, clip.start, clip.start + clip.length - 1);
+            state.currentFrame = math.clamp(
+                state.currentFrame,
+                clip.start,
+                clip.start + clip.length - 1
+            );
             currentFrame.value = state.currentFrame;
         }
-
     }
-    [WithAll(typeof(Tag))]
 
     [BurstCompile]
-    [WithAll(typeof(PerInstanceCullingTag))]
     public partial struct PlayAnimationJobLerp : IJobEntity
     {
         [ReadOnly]
@@ -263,7 +349,8 @@ namespace GPUSkin
         public void Execute(
             ref CurrentFrame currentFrame,
             ref LerpFrame lerpFrame,
-            ref AnimationController animation)
+            ref AnimationController animation
+        )
         {
             ref readonly var clip = ref animation.currentState.clip;
             ref var state = ref animation.currentState;
@@ -286,9 +373,6 @@ namespace GPUSkin
             state.currentFrame = clip.start + travelFrame;
             currentFrame.value = state.currentFrame;
             lerpFrame.value += clip.start;
-
         }
     }
 }
-
-

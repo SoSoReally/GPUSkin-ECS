@@ -9,17 +9,26 @@ namespace GPUSkin
 {
     public readonly ref struct PlayAnimation
     {
-        public PlayAnimation(int index, float transitionTime, in Entity entity, EntityManager entityManager )
+        public PlayAnimation(
+            int index,
+            float transitionTime,
+            in Entity entity,
+            EntityManager entityManager
+        )
         {
             var ac = entityManager.GetComponentData<AnimationController>(entity);
             var map = entityManager.GetComponentData<BlobAssertReferenceGPUAnimator>(entity);
             var next = GPUSkinUtility.ClipConvertState(map.Animator.Value.Clips[index]);
             if (ac.CanTranition)
             {
-
                 entityManager.SetComponentEnabled<AnimationTransition>(entity, true);
-                var animationTransition = new AnimationTransition() { nextState = next, normalizeLength = transitionTime };
-                var noramllength = (transitionTime % next.clip.normalizeLength) * next.clip.frameRate;
+                var animationTransition = new AnimationTransition()
+                {
+                    nextState = next,
+                    normalizeLength = transitionTime
+                };
+                var noramllength =
+                    (transitionTime % next.clip.normalizeLength) * next.clip.frameRate;
                 var transitionFrame = new TransitionFrame()
                 {
                     value = next.clip.start + math.ceil(noramllength)
@@ -34,6 +43,7 @@ namespace GPUSkin
                 entityManager.SetComponentData<AnimationController>(entity, ac);
             }
         }
+
         public PlayAnimation(float speed, in Entity entity, EntityManager entityManager)
         {
             var ac = entityManager.GetComponentData<AnimationController>(entity);
@@ -41,10 +51,14 @@ namespace GPUSkin
             entityManager.SetComponentData<AnimationController>(entity, ac);
         }
     }
+
     public struct GPUAnimator
     {
         public BlobArray<GPUAnimationClip> Clips;
-        public static BlobAssetReference<GPUAnimator> Build(Span<GPUAnimationClip> gPUAnimationClips)
+
+        public static BlobAssetReference<GPUAnimator> Build(
+            Span<GPUAnimationClip> gPUAnimationClips
+        )
         {
             using var bb = new BlobBuilder(Allocator.Temp);
 
@@ -56,43 +70,43 @@ namespace GPUSkin
             }
             return bb.CreateBlobAssetReference<GPUAnimator>(Allocator.Persistent);
         }
+
         public static BlobAssetReference<GPUAnimator> Build(GPUSkinAsset gPUSkinAsset)
         {
-            return Build(gPUSkinAsset.Clips.Select((a) => { return a.GPUClip; }).ToArray());
+            return Build(
+                gPUSkinAsset
+                    .Clips.Select(
+                        (a) =>
+                        {
+                            return a.GPUClip;
+                        }
+                    )
+                    .ToArray()
+            );
         }
-
     }
-    [WriteGroup(typeof(CurrentFrame))]
+
     [MaterialProperty("_CurrentFrame")]
-    public partial struct CurrentFrame : IComponentData
-    {
-    }
+    public partial struct CurrentFrame : IComponentData { }
+
+    [WriteGroup(typeof(AnimationController))]
+    public partial struct CurrentFrameWrite : IComponentData { }
+
     [MaterialProperty("_LerpFrame")]
-    [WriteGroup(typeof(CurrentFrame))]
-    public partial struct LerpFrame : IComponentData
-    {
-    }
+    public partial struct LerpFrame : IComponentData { }
+
+    [WriteGroup(typeof(AnimationController))]
+    public partial struct LerpFrameWrite : IComponentData { }
+
     [MaterialProperty("_TransitionFrame")]
-    public partial struct TransitionFrame : IComponentData
-    {
-    }
+    public partial struct TransitionFrame : IComponentData { }
+
     [MaterialProperty("_Transition")]
-    public partial struct Transition : IComponentData
-    {
+    public partial struct Transition : IComponentData { }
 
-    }
+    public partial struct AnimationController : IComponentData { }
 
-    public partial struct AnimationController : IComponentData
-    {
-
-    }
-    public partial struct AnimationTransition : IComponentData, IEnableableComponent
-    {
-
-    }
-
-
-
+    public partial struct AnimationTransition : IComponentData, IEnableableComponent { }
 
     public struct Tag : IComponentData { }
 
@@ -101,4 +115,3 @@ namespace GPUSkin
         public BlobAssetReference<GPUAnimator> Animator;
     }
 }
-
